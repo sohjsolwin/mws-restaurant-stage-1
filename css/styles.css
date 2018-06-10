@@ -109,7 +109,9 @@ nav h1 a {
 }
 /* ====================== Map ====================== */
 #map {
-  height: 400px;
+  max-height: 400px;
+  min-height: 200px;
+  height: 25vh;
   width: 100%;
   background-color: #ccc;
 }
@@ -154,7 +156,7 @@ nav h1 a {
   padding: 30px 15px 60px;
   text-align: center;
 }
-#restaurants-list li {
+#restaurants-list .restaurant-chip {
   background-color: #fff;
   border: 2px solid #ccc;
   font-family: Arial,sans-serif;
@@ -174,7 +176,7 @@ nav h1 a {
   display: block;
   margin: 0;
   max-width: 100%;
-  min-height: 248px;
+  min-height: 200px;
   min-width: 100%;
 }
 #restaurants-list li h1 {
@@ -193,7 +195,6 @@ nav h1 a {
 }
 #restaurants-list li a {
   background-color: orange;
-  border-bottom: 3px solid #eee;
   color: #fff;
   display: inline-block;
   font-size: 10pt;
@@ -202,6 +203,8 @@ nav h1 a {
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
+  width: calc(100% - 60px);
+
 }
 
 /* ====================== Restaurant Details ====================== */
