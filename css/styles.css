@@ -153,10 +153,15 @@ nav h1 a {
   font-family: Arial,sans-serif;
   margin: 15px;
   min-height: 380px;
-  padding: 0 30px 25px;
   text-align: left;
-  width: 270px;
+  min-width: 270px;
+  max-width: 100%;
 }
+
+#restaurants-list li div.restaurant-details {
+  padding: 0 30px 25px;
+}
+
 #restaurants-list .restaurant-img {
   background-color: #ccc;
   display: block;
