@@ -21,9 +21,8 @@
     <section id="map-container">
       <div id="map"></div>
     </section>
-    <section if="filter-container">
-      <div class="filter-options">
-        <h2>Filter Results</h2>
+    <section id="filter-container">
+      <div class="filter-options" aria-describedby="Filter Options">
         <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
           <option value="all">All Neighborhoods</option>
         </select>
