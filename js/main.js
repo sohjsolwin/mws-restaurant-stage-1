@@ -1,7 +1,7 @@
 let restaurants,
   neighborhoods,
   cuisines
-var map
+var newMap
 var markers = []
 
 
@@ -42,13 +42,27 @@ function registerServiceWorker() {
 
 registerServiceWorker();
 
+document.getElementById('neighborhoods-select').addEventListener(
+  "keydown", function(e) {
+    var shiftKey = (window.event) ? event.shiftKey : e.shiftKey;
+    var keycode = (window.event) ? event.keyCode : e.keyCode;
+    if (shiftKey && keycode == 9)
+    {
+      document.getElementById('map').focus();
+      e.preventDefault();
+    }
+  });
+
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+  initMap(); // added 
   fetchNeighborhoods();
   fetchCuisines();
 });
+
+
 
 /**
  * Fetch all neighborhoods and set their HTML.
@@ -106,20 +120,89 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
 }
 
 /**
- * Initialize Google map, called from HTML.
+ * Initialize leaflet map, called from HTML.
  */
-window.initMap = () => {
-  let loc = {
-    lat: 40.722216,
-    lng: -73.987501
-  };
-  self.map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: loc,
-    scrollwheel: false
+initMap = () => {
+  var lat = 40.722216;
+  var lng = -73.987501;
+  self.newMap = L.map('map', {
+        center: [lat, lng],
+        zoom: 12,
+        scrollWheelZoom: false
+      });
+  L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.jpg70?access_token={mapboxToken}', {
+    mapboxToken: 'pk.eyJ1Ijoic29oanNvbHdpbiIsImEiOiJjamliaXM0ZjcxaW03M3dwYXRtODgzM2N6In0.dXsHJkmlbF2x9nxOoFrF_Q',
+    maxZoom: 18,
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+      '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+      'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    id: 'mapbox.streets'
+  }).addTo(newMap);
+
+  /* https://www.visionaustralia.org/services/digital-access/resources/google-map */
+  var map_canvas = document.getElementById('map');
+  var hPan = Math.floor(map_canvas.offsetHeight/3);
+  var wPan = Math.floor(map_canvas.offsetWidth/3);
+
+  map_canvas.setAttribute("tabindex","0");
+
+  map_canvas.addEventListener("focus", function(ev){this.style.outline = "2px solid #4D8FFD"});
+  map_canvas.addEventListener("blur", function(ev){this.style.outline = "0"});
+
+  map_canvas.addEventListener("keydown", function(ev){
+
+      //exit if Ctrl or Alt is pressed
+      //this allows users to scroll the page by pressing e.g. Ctrl + Arrow
+      if(ev.ctrlKey || ev.altKey) return;
+
+      var key = ev.key.toLowerCase();
+
+      if(key==="+" || key=== "add"){
+        newMap.setZoom(newMap.getZoom() + 1);
+      }else if(key==="-" || key==="subtract"){
+        newMap.setZoom(newMap.getZoom() - 1);
+      }else if(key==="arrowup" || key==="up"){
+        newMap.panBy(0, wPan);
+      }else if(key==="arrowdown" || key==="down"){
+        newMap.panBy(0, -wPan);
+      }else if(key==="arrowleft" || key==="left"){
+        newMap.panBy(-hPan, 0);
+      }else if(key==="arrowright" || key==="right"){
+        newMap.panBy(hPan, 0);
+      }else if(key==="escape" || key==="esc"){
+        newMap.setZoom(zo);
+        newMap.setCenter({lat: lat, lng: lng});
+      }else if(key=="tab"){
+        if (ev.shiftKey) {
+          document.getElementById("headerlink").focus();
+        } else {
+          document.getElementById("neighborhoods-select").focus();
+        }
+      }else{
+          return;
+      }
+      ev.preventDefault();
   });
+
+
   updateRestaurants();
 }
+
+// /**
+//  * Initialize Google map, called from HTML.
+//  */
+// window.initMap = () => {
+//   let loc = {
+//     lat: 40.722216,
+//     lng: -73.987501
+//   };
+//   self.map = new google.maps.Map(document.getElementById('map'), {
+//     zoom: 12,
+//     center: loc,
+//     scrollwheel: false
+//   });
+//   updateRestaurants();
+// }
 
 /**
  * Update page and map for current restaurants.
@@ -188,7 +271,7 @@ createRestaurantHTML = (restaurant) => {
   const container = document.createElement('div');
   container.className = 'restaurant-details';
 
-  const name = document.createElement('h1');
+  const name = document.createElement('h2');
   name.innerHTML = restaurant.name;
   container.append(name);
 
@@ -219,10 +302,20 @@ createRestaurantHTML = (restaurant) => {
 addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     // Add marker to the map
-    const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
-    google.maps.event.addListener(marker, 'click', () => {
-      window.location.href = marker.url
-    });
-    self.markers.push(marker);
+    const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.newMap);
+    marker.on("click", onClick);
+    function onClick() {
+      window.location.href = marker.options.url;
+    }
   });
-}
+} 
+// addMarkersToMap = (restaurants = self.restaurants) => {
+//   restaurants.forEach(restaurant => {
+//     // Add marker to the map
+//     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
+//     google.maps.event.addListener(marker, 'click', () => {
+//       window.location.href = marker.url
+//     });
+//     self.markers.push(marker);
+//   });
+// }
