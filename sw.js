@@ -1,4 +1,4 @@
-var staticCacheName = 'restaurant-reviews-static-v3';
+var staticCacheName = 'restaurant-reviews-static-v4';
 var contentImgsCache = 'restaurant-reviews-imgs';
 var allCaches = [
   staticCacheName,
@@ -66,11 +66,12 @@ self.addEventListener('fetch', function(event) {
     }
   }
 
-  event.respondWith(
-    caches.match(event.request).then(function(response) {
-      return response || fetch(event.request);
-    })
-  );
+  event.respondWith(matchOrCache(event.request));
+  // event.respondWith(
+  //   caches.match(event.request).then(function(response) {
+  //     return response || fetch(event.request);
+  //   })
+  // );
 });
 
 function matchOrCache(request) {
