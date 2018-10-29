@@ -17,10 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
  * Initialize leaflet map
  */
 let initMap = () => {
-  fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {      
+  fetchRestaurantFromURL()
+    .then((restaurant) => {    
       self.newMap = L.map('map', {
         center: [restaurant.latlng.lat, restaurant.latlng.lng],
         zoom: 16,
@@ -36,32 +34,31 @@ let initMap = () => {
       }).addTo(newMap);
       fillBreadcrumb();
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.newMap);
-    }
-  });
+    })
+    .catch(error => console.error(error));
 }; 
 
 /**
  * Get current restaurant from page URL.
  */
-let fetchRestaurantFromURL = (callback) => {
+let fetchRestaurantFromURL = () => {
   if (self.restaurant) { // restaurant already fetched!
-    callback(null, self.restaurant);
-    return;
+    return Promise.resolve(self.restaurant);
   }
   const id = getParameterByName('id');
   if (!id) { // no id found in URL
-    var error = 'No restaurant id in URL';
-    callback(error, null);
+    return Promise.reject('No restaurant id in URL');
   } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
-        console.error(error);
-        return;
-      }
-      fillRestaurantHTML();
-      callback(null, restaurant);
-    });
+    return DBHelper.fetchRestaurantById(id)
+      .then((restaurant) => {
+        self.restaurant = restaurant;
+        if (!restaurant) {
+          return Promise.reject('Mo restaurant found');
+        }
+        fillRestaurantHTML();
+        return restaurant;
+      })
+      .catch(error => console.error(error));
   }
 };
 

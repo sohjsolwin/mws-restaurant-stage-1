@@ -1,4 +1,4 @@
-var staticCacheName = 'restaurant-reviews-static-v10';
+var staticCacheName = 'restaurant-reviews-static-v11';
 var contentImgsCache = 'restaurant-reviews-imgs';
 var allCaches = [
   staticCacheName,
@@ -11,21 +11,20 @@ self.addEventListener('install', function(event) {
     '/restaurant.html',
     '/js/main.js',
     '/js/restaurant_info.js',
-    '/js/dbhelper.js',
-    '/data/restaurants.json',
-    '/css/styles.css'
+    '/css/styles.css',
+    '/css/extra.css'
   ];
   event.waitUntil(
     caches.open(staticCacheName).then(function(cache) {
       return cache.addAll(urlsToCache);
     }).catch(function(ex) {
-      console.log("Failure to cache all");
+      console.log('Failure to cache all');
     })
   );
 });
 
 self.addEventListener('activate', function(event) {
-  console.log("Service Worker installed.");
+  console.log('Service Worker installed.');
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
       return Promise.all(
@@ -81,9 +80,9 @@ function matchOrCache(request) {
       if (cacheMatch) return cacheMatch;
 
       return fetch(originalRequest).then(function(response) {
-          cache.put(request.url, response.clone());
-          return response;
-        });
+        cache.put(request.url, response.clone());
+        return response;
+      });
     }); 
   });
 }
@@ -97,9 +96,9 @@ function servePhoto(request) {
       if (cacheMatch) return cacheMatch;
 
       return fetch(originalRequest).then(function(response) {
-          cache.put(storageUrl, response.clone());
-          return response;
-        });
+        cache.put(storageUrl, response.clone());
+        return response;
+      });
     }); 
   });
 }
