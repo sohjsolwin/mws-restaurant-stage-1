@@ -1,5 +1,6 @@
-/* global L:false DBHelper:false */
+/* global DBHelper:false, L:false */
 /* eslint-disable no-console */
+
 /* eslint-disable no-unused-vars*/
 let restaurants,
   neighborhoods,

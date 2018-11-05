@@ -1,4 +1,7 @@
 {
+    "parserOptions":{
+      "sourceType": "module"  
+    },
     "rules": {
         "indent": [
             2,
@@ -16,6 +19,10 @@
             2,
             "always"
         ]
+    },
+    "globals":{
+        "module":false,
+        "L":false
     },
     "env": {
         "browser": true,

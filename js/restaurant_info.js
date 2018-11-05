@@ -1,6 +1,7 @@
 
-/* global DBHelper:false L:false */
+/* global DBHelper:false, L:false */
 /* eslint-disable no-console */
+
 /* eslint-disable no-unused-vars*/
 let restaurant;
 /* eslint-enable no-unused-vars*/

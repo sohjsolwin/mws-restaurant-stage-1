@@ -1,8 +1,20 @@
-/* global L:false */
 /**
  * Common database helper functions.
  */
+
+//import idb from 'idb';
+let _dbPromise = undefined;
 class DBHelper { /* eslint-disable-line no-unused-vars */
+
+  // let init = () => {
+  //   DBHelper._idb = _openDatabase();
+  // };
+
+  static get dbPromise() {
+    if (!_dbPromise) _dbPromise = DBHelper.openDatabase();
+
+    return _dbPromise;
+  }
 
   /**
    * Database URL.
@@ -17,11 +29,9 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
    * Fetch all restaurants.
    */
   static fetchRestaurants() {
-    return fetch(DBHelper.DATABASE_URL)
+    return DBHelper.matchOrDb(DBHelper.DATABASE_URL)
       .then((response)=> {
-        return response.json().then(json => {
-          return response.ok ? json : Promise.reject(`Request failed. Returned status of ${response.status}`);
-        });
+        return response.length>0 ? Promise.resolve(response) : Promise.reject(`Request failed. Returned status of ${response.status}`);
       });
   }
 
@@ -29,11 +39,9 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
    * Fetch a restaurant by its ID.
    */
   static fetchRestaurantById(id) {
-    return fetch(`${DBHelper.DATABASE_URL}/${id}`)
+    return DBHelper.matchSingleIdOrDb(`${DBHelper.DATABASE_URL}/${id}`)
       .then((response)=> {
-        return response.json().then(json => {
-          return response.ok ? json : Promise.reject(`Request failed. Returned status of ${response.status}`);
-        });
+        return response ? response : Promise.reject(`Request failed. Returned status of ${response.status}`);
       });
   }
 
@@ -114,7 +122,75 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
-    return (`/img/${restaurant.photograph}`);
+    return (`/img/${restaurant.photograph}.jpg`);
+  }
+  
+  static openDatabase() {
+    if(!navigator.serviceWorker) return Promise.resolve();
+
+    return idb.open('restaurant', 1, function(upgradeDb) { /* eslint-disable-line no-undef */
+      switch(upgradeDb.oldVersion) {
+      case 0:
+        var dbStore = upgradeDb.createObjectStore('restaurants', {keypath: 'id'});
+        dbStore.createIndex('by-cuisine', 'cuisine_type');
+        dbStore.createIndex('by-neighborhood', 'neighborhood');
+      }
+    });
+  }
+
+  static matchOrDb(requestUrl) {
+    return DBHelper.dbPromise.then(function(db){
+      if (db) {
+        var tx = db.transaction('restaurants', 'readonly');
+        var store = tx.objectStore('restaurants');
+        return store.getAll();
+      }
+      return [];
+    }).then(data => {
+      if (data.length > 0) {
+        return Promise.resolve(data);
+      } else {
+        return DBHelper.dbPromise.then(function(db){
+          return fetch(requestUrl).then(function(response) {
+            response.clone().json().then(json => {
+              var tx = db.transaction('restaurants', 'readwrite');
+              var store = tx.objectStore('restaurants');
+              
+              json.forEach(restaurant => {
+                store.put(restaurant, restaurant.id);
+              }); 
+            });
+            return response.json();
+          });
+        });
+      }
+    });
+  }
+
+  static matchSingleIdOrDb(requestUrl) {
+    var restaurantId = requestUrl.replace(/\/restaurants\//, '');
+    return DBHelper.dbPromise.then(function(db){
+      if (db) {
+        var tx = db.transaction('restaurants', 'readonly');
+        var store = tx.objectStore('restaurants');
+        return store.get(restaurantId);
+      }
+      return undefined;
+    }).then(data => {
+      if (data) { return Promise.resolve(data); }
+
+      return DBHelper.dbPromise.then(function(db){
+        return fetch(requestUrl).then(function(response) {
+          response.clone().json().then(json => {
+            var tx = db.transaction('restaurants', 'readwrite');
+            var store = tx.objectStore('restaurants');
+            
+            store.put(json, json.id);
+          });
+          return response.json();
+        });
+      });
+    });
   }
 
   /**
@@ -132,5 +208,5 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
       });
     marker.addTo(map);
     return marker;
-  } 
+  }
 }

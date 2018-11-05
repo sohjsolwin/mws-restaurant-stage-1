@@ -12,11 +12,11 @@ var sourcemaps = require('gulp-sourcemaps');
 var imagemin = require('gulp-imagemin');
 var pngquant = require('imagemin-pngquant');
 
-gulp.task('default', ['copy-html', 'copy-images', 'styles', 'lint', 'scripts-home', 'scripts-rest'], function() {
+gulp.task('default', ['copy-html', 'copy-idb', 'copy-images', 'styles', 'lint', 'scripts-home', 'scripts-rest'], function() {
   gulp.watch('sass/**/*.scss', ['styles']);
   gulp.watch('js/**/*.js', ['lint']);
-  gulp.watch('/index.html', ['copy-html']);
-  gulp.watch('/restaurant.html', ['copy-html']);
+  gulp.watch('/*.html', ['copy-html']);
+  gulp.watch('/sw.js', ['copy-html']);
   gulp.watch('./dist/index.html').on('change', browserSync.reload);
   gulp.watch('./dist/restautant.html').on('change', browserSync.reload);
 
@@ -27,6 +27,7 @@ gulp.task('default', ['copy-html', 'copy-images', 'styles', 'lint', 'scripts-hom
 
 gulp.task('dist', [
   'copy-html',
+  'copy-idb',
   'copy-images-dist',
   'styles',
   'lint',
@@ -67,8 +68,13 @@ gulp.task('scripts-rest-dist', function() {
     .pipe(gulp.dest('./dist/js'));
 });
 
+gulp.task('copy-idb', function() {
+  gulp.src('./js/idb.js')
+    .pipe(gulp.dest('./dist/js'));
+});
+
 gulp.task('copy-html', function() {
-  gulp.src(['./index.html', './restaurant.html'])
+  gulp.src(['./index.html', './restaurant.html', './sw.js'])
     .pipe(gulp.dest('./dist'));
 });
 

@@ -1,9 +1,10 @@
-var staticCacheName = 'restaurant-reviews-static-v11';
+var staticCacheName = 'restaurant-reviews-static-v12';
 var contentImgsCache = 'restaurant-reviews-imgs';
 var allCaches = [
   staticCacheName,
   contentImgsCache
 ];
+var _dbPromise;
 
 self.addEventListener('install', function(event) {
   var urlsToCache = [
@@ -11,6 +12,7 @@ self.addEventListener('install', function(event) {
     '/restaurant.html',
     '/js/main.js',
     '/js/restaurant_info.js',
+    '/js/idb.js',
     '/css/styles.css',
     '/css/extra.css'
   ];
@@ -39,6 +41,8 @@ self.addEventListener('activate', function(event) {
   );
 });
 
+
+
 self.addEventListener('fetch', function(event) {
   var requestUrl = new URL(event.request.url);
   if (requestUrl.origin === location.origin)
@@ -53,10 +57,6 @@ self.addEventListener('fetch', function(event) {
       event.respondWith(
         caches.match('/restaurant.html')
       );
-      return;
-    }
-    if (requestUrl.pathname === '/data/restaurants.json') {
-      event.respondWith(matchOrCache(event.request));
       return;
     }
     if (requestUrl.pathname.startsWith('/img/')) {
