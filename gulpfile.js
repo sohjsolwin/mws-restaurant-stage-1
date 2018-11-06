@@ -12,7 +12,7 @@ var sourcemaps = require('gulp-sourcemaps');
 var imagemin = require('gulp-imagemin');
 var pngquant = require('imagemin-pngquant');
 
-gulp.task('default', ['copy-html', 'copy-idb', 'copy-images', 'styles', 'lint', 'scripts-home', 'scripts-rest'], function() {
+gulp.task('default', ['copy-html', 'copy-idb', 'copy-images-dist', 'styles', 'lint', 'scripts-home', 'scripts-rest'], function() {
   gulp.watch('sass/**/*.scss', ['styles']);
   gulp.watch('js/**/*.js', ['lint']);
   gulp.watch('/*.html', ['copy-html']);
@@ -74,17 +74,17 @@ gulp.task('copy-idb', function() {
 });
 
 gulp.task('copy-html', function() {
-  gulp.src(['./index.html', './restaurant.html', './sw.js'])
+  gulp.src(['./index.html', './restaurant.html', './sw.js', './manifest.json'])
     .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('copy-images', function() {
-  gulp.src('img/*')
+  gulp.src('img/**/*')
     .pipe(gulp.dest('dist/img'));
 });
 
 gulp.task('copy-images-dist', function() {
-  gulp.src('img/*')
+  gulp.src('img/**/*')
     .pipe(imagemin({
       progressive: true,
       use:[pngquant()]

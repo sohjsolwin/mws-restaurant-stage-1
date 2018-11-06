@@ -1,4 +1,4 @@
-var staticCacheName = 'restaurant-reviews-static-v12';
+var staticCacheName = 'restaurant-reviews-static-v13';
 var contentImgsCache = 'restaurant-reviews-imgs';
 var allCaches = [
   staticCacheName,
@@ -59,6 +59,10 @@ self.addEventListener('fetch', function(event) {
       );
       return;
     }
+    if (requestUrl.pathname.startsWith('/img/icons/')) {
+      event.respondWith(serveIcon(event.request));
+      return;
+    }
     if (requestUrl.pathname.startsWith('/img/')) {
       event.respondWith(servePhoto(event.request));
       return;
@@ -89,6 +93,22 @@ function matchOrCache(request) {
 
 function servePhoto(request) { 
   var storageUrl = request.url.replace(/-\d+px\.jpg$/, '');
+  var originalRequest = request;
+  
+  return caches.open('restaurant-reviews-imgs').then(function(cache) {
+    return cache.match(storageUrl).then(cacheMatch => {
+      if (cacheMatch) return cacheMatch;
+
+      return fetch(originalRequest).then(function(response) {
+        cache.put(storageUrl, response.clone());
+        return response;
+      });
+    }); 
+  });
+}
+
+function serveIcon(request) { 
+  var storageUrl = request.url;
   var originalRequest = request;
   
   return caches.open('restaurant-reviews-imgs').then(function(cache) {
