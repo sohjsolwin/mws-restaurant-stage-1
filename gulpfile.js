@@ -13,10 +13,10 @@ var imagemin = require('gulp-imagemin');
 var pngquant = require('imagemin-pngquant');
 
 gulp.task('default', ['copy-html', 'copy-idb', 'copy-images-dist', 'styles', 'lint', 'scripts-home', 'scripts-rest'], function() {
-  gulp.watch('sass/**/*.scss', ['styles']);
-  gulp.watch('js/**/*.js', ['lint']);
-  gulp.watch('/*.html', ['copy-html']);
-  gulp.watch('/sw.js', ['copy-html']);
+  gulp.watch('./sass/**/*.scss', ['styles']);
+  gulp.watch('./js/**/*.js', ['lint']);
+  gulp.watch('./*.html', ['copy-html']);
+  gulp.watch('./sw.js', ['copy-html']);
   gulp.watch('./dist/index.html').on('change', browserSync.reload);
   gulp.watch('./dist/restautant.html').on('change', browserSync.reload);
 
