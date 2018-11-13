@@ -143,15 +143,38 @@ http://localhost:1337/reviews/
 ```
   */
   static storeRestaurantReview(restaurantId, reviewerName, rating, comments) {
-    fetch(DBHelper.REVIEWS_URL, {
+    return fetch(DBHelper.REVIEWS_URL, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({restaurant_id: restaurantId, name: reviewerName, rating: rating, comments: comments})
+    }).then(response => {
+      if (response.ok) {
+        return DBHelper.dbPromise.then(function(db){
+          if (db) {
+            var tx = db.transaction('reviews', 'readwrite');
+            var store = tx.objectStore('reviews');
+            
+            var dt = new Date();
+            return store.put(
+              {
+                'id': dt,
+                'restaurant_id': restaurantId,
+                'name': reviewerName,
+                'createdAt': dt,
+                'rating': rating,
+                'comments': comments,
+                'temporary': true
+              }, dt).then(() => {
+              return Promise.resolve(response);
+            });
+          }
+          return response;
+        });
+      }
     });
-    return null;
   }
 
   /**
@@ -240,7 +263,7 @@ http://localhost:1337/reviews/
   }
 
   static matchSingleReviewOrDb(requestUrl) {
-    var restaurantId = requestUrl.replace(/\/reviews\//, '');
+    var restaurantId = /restaurant_id=(\d\*)/.exec(requestUrl)[0];
     return DBHelper.dbPromise.then(function(db){
       if (db) {
         var tx = db.transaction('reviews', 'readonly');
@@ -249,24 +272,54 @@ http://localhost:1337/reviews/
       }
       return undefined;
     }).then(data => {
-      if (data.length > 0) { return Promise.resolve(data); }
+      if (data.length > 0 ) {
+        if (data.some(value => {
+          return value.temporary;
+        })) {
+          DBHelper._removeTemporaryReviews()
+            .then(() => DBHelper._fetchAndStoreReviews(requestUrl))
+            .catch( () => { /* ignore */});
+        }
+        return Promise.resolve(data); 
+      }
 
-      return DBHelper.dbPromise.then(function(db){
-        return fetch(requestUrl).then(function(response) {
-          response.clone().json().then(json => {
-            var tx = db.transaction('reviews', 'readwrite');
-            var store = tx.objectStore('reviews');
-            
-            json.forEach(review => {
-              store.put(review, review.id);
-            }); 
-          });
-          return response.json();
+      return this._fetchAndStoreReviews(requestUrl);
+    });
+  }
+
+  static _removeTemporaryReviews() {
+    return DBHelper.dbPromise.then(function(db) {
+      var tx = db.transaction('reviews', 'readwrite');
+      var store = tx.objectStore('reviews');
+
+      return store.getAll();
+    }).then(reviews => {
+      var filteredReviews = reviews.filter(review => review.temporary);
+      return DBHelper.dbPromise.then(function(db) {
+        var tx = db.transaction('reviews', 'readwrite');
+        var store = tx.objectStore('reviews');
+
+        filteredReviews.forEach(element => {
+          store.delete(element.id);
         });
       });
     });
   }
-
+  static _fetchAndStoreReviews(requestUrl) {
+    return DBHelper.dbPromise.then(function(db){
+      return fetch(requestUrl).then(function(response) {
+        response.clone().json().then(json => {
+          var tx = db.transaction('reviews', 'readwrite');
+          var store = tx.objectStore('reviews');
+          
+          json.forEach(review => {
+            store.put(review, review.id);
+          }); 
+        });
+        return response.json();
+      });
+    });
+  }
   /**
    * Map marker for a restaurant.
    */

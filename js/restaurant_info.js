@@ -233,6 +233,7 @@ let createReviewFormHTML = () => {
 
   const submitDiv = document.createElement('div');
   const submitButton = document.createElement('a');
+  submitButton.href = '#';
   submitButton.onclick = addNewReview;
   submitButton.innerHTML = 'Add your review';
   submitButton.setAttribute('aria-label', 'Submit your review');
@@ -242,7 +243,18 @@ let createReviewFormHTML = () => {
 };
 
 let addNewReview = () => {
+  let userName = document.querySelector('input[name="user-name-input"]').value;
+  let userRating = document.querySelector('input[name="ratings"]:checked').value;
+  let userComments = document.querySelector('textarea[name="user-comment-input"]').value;
 
+  DBHelper.storeRestaurantReview(self.restaurant.id, userName, userRating, userComments)
+    .then(response => {
+      if (response) {
+        location.reload();
+      } else {
+        alert('Something went wrong while saving your review. Please try again.');
+      }
+    });
 };
 /**
  * Add restaurant name to the breadcrumb navigation menu

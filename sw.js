@@ -5,6 +5,7 @@ var allCaches = [
   contentImgsCache
 ];
 var _dbPromise;
+var callsToCache = [];
 
 self.addEventListener('install', function(event) {
   var urlsToCache = [
@@ -42,39 +43,72 @@ self.addEventListener('activate', function(event) {
 });
 
 
-
 self.addEventListener('fetch', function(event) {
   var requestUrl = new URL(event.request.url);
-  if (requestUrl.origin === location.origin)
-  {
-    if (requestUrl.pathname === '/') {
-      event.respondWith(
-        caches.match('/index.html')
-      );
-      return;
+  var requestMethod = event.request.method;
+
+  if (requestMethod == 'GET') {
+    if (requestUrl.origin === location.origin)
+    {
+      if (requestUrl.pathname === '/') {
+        event.respondWith(
+          caches.match('/index.html')
+        );
+        return;
+      }
+      if (requestUrl.pathname === '/restaurant.html') {
+        event.respondWith(
+          caches.match('/restaurant.html')
+        );
+        return;
+      }
+      if (requestUrl.pathname.startsWith('/img/icons/')) {
+        event.respondWith(serveIcon(event.request));
+        return;
+      }
+      if (requestUrl.pathname.startsWith('/img/')) {
+        event.respondWith(servePhoto(event.request));
+        return;
+      }
     }
-    if (requestUrl.pathname === '/restaurant.html') {
-      event.respondWith(
-        caches.match('/restaurant.html')
-      );
-      return;
+
+    event.respondWith(matchOrCache(event.request));
+    // event.respondWith(
+    //   caches.match(event.request).then(function(response) {
+    //     return response || fetch(event.request);
+    //   })
+    // );
+  } else if (requestMethod == 'POST') {
+    // Adapted from: https://stackoverflow.com/questions/38986351/serviceworker-cache-all-failed-post-requests-when-offline-and-resubmit-when-on
+      
+    if (!navigator.onLine) {
+      
+      if (event.request.url.includes('/reviews') && !navigator.onLine) {
+        var request = event.request;
+        var serialized = {
+          url: request.url,
+          method: request.method
+        };
+        request.clone().text().then(function(body) {
+          serialized.body = body;
+          callsToCache.push(serialized);
+        });
+        event.respondWith(new Response(new Blob(), { 'status' : 200 , 'statusText' : 'Response Cached' }));     
+        return;
+      }
+    } else if(navigator.onLine && callsToCache.length > 0) {
+      callsToCache.forEach(function(reviewRequest) {
+        fetch(reviewRequest.url, {
+          method: reviewRequest.method,
+          body: reviewRequest.body
+        });
+      });
+      callsToCache = [];
     }
-    if (requestUrl.pathname.startsWith('/img/icons/')) {
-      event.respondWith(serveIcon(event.request));
-      return;
-    }
-    if (requestUrl.pathname.startsWith('/img/')) {
-      event.respondWith(servePhoto(event.request));
-      return;
-    }
+
+    event.respondWith(fetch(event.request));
   }
 
-  event.respondWith(matchOrCache(event.request));
-  // event.respondWith(
-  //   caches.match(event.request).then(function(response) {
-  //     return response || fetch(event.request);
-  //   })
-  // );
 });
 
 function matchOrCache(request) {
