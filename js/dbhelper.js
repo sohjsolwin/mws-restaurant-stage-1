@@ -263,7 +263,7 @@ http://localhost:1337/reviews/
   }
 
   static matchSingleReviewOrDb(requestUrl) {
-    var restaurantId = /restaurant_id=(\d\*)/.exec(requestUrl)[0];
+    var restaurantId = /restaurant_id=(\d*)/.exec(requestUrl)[1];
     return DBHelper.dbPromise.then(function(db){
       if (db) {
         var tx = db.transaction('reviews', 'readonly');
