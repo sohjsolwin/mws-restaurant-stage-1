@@ -22,14 +22,23 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
    */
   static get DATABASE_URL() {
     const port = 1337; // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
+    return `http://localhost:${port}/`;
   }
+
+  static get RESTAURANTS_URL() {
+    return `${DBHelper.DATABASE_URL}restaurants`;
+  }
+
+  static get REVIEWS_URL() {
+    return `${DBHelper.DATABASE_URL}reviews`;
+  }
+
 
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants() {
-    return DBHelper.matchOrDb(DBHelper.DATABASE_URL)
+    return DBHelper.matchOrDb(DBHelper.RESTAURANTS_URL)
       .then((response)=> {
         return response.length>0 ? Promise.resolve(response) : Promise.reject(`Request failed. Returned status of ${response.status}`);
       });
@@ -39,9 +48,15 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
    * Fetch a restaurant by its ID.
    */
   static fetchRestaurantById(id) {
-    return DBHelper.matchSingleIdOrDb(`${DBHelper.DATABASE_URL}/${id}`)
+    return DBHelper.matchSingleIdOrDb(`${DBHelper.RESTAURANTS_URL}/${id}`)
       .then((response)=> {
         return response ? response : Promise.reject(`Request failed. Returned status of ${response.status}`);
+      }).then((restaurant) => {
+        return DBHelper.matchSingleReviewOrDb(`${DBHelper.REVIEWS_URL}?restaurant_id=${id}`)
+          .then(reviews => {
+            restaurant.reviews = reviews;
+            return Promise.resolve(restaurant);
+          });
       });
   }
 
@@ -111,6 +126,34 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
     });
   }
 
+  /*
+#### Create a new restaurant review
+```
+http://localhost:1337/reviews/
+```
+
+###### Parameters
+```
+{
+    "restaurant_id": <restaurant_id>,
+    "name": <reviewer_name>,
+    "rating": <rating>,
+    "comments": <comment_text>
+}
+```
+  */
+  static storeRestaurantReview(restaurantId, reviewerName, rating, comments) {
+    fetch(DBHelper.REVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({restaurant_id: restaurantId, name: reviewerName, rating: rating, comments: comments})
+    });
+    return null;
+  }
+
   /**
    * Restaurant page URL.
    */
@@ -128,12 +171,15 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
   static openDatabase() {
     if(!navigator.serviceWorker) return Promise.resolve();
 
-    return idb.open('restaurant', 1, function(upgradeDb) { /* eslint-disable-line no-undef */
+    return idb.open('restaurant', 2, function(upgradeDb) { /* eslint-disable-line no-undef */
       switch(upgradeDb.oldVersion) {
       case 0:
         var dbStore = upgradeDb.createObjectStore('restaurants', {keypath: 'id'});
         dbStore.createIndex('by-cuisine', 'cuisine_type');
         dbStore.createIndex('by-neighborhood', 'neighborhood');
+      case 1: /* eslint-disable-line no-fallthrough */
+        var revDbStore = upgradeDb.createObjectStore('reviews', {keypath: 'id'});
+        revDbStore.createIndex('by-restaurant', 'restaurant_id');
       }
     });
   }
@@ -186,6 +232,34 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
             var store = tx.objectStore('restaurants');
             
             store.put(json, json.id);
+          });
+          return response.json();
+        });
+      });
+    });
+  }
+
+  static matchSingleReviewOrDb(requestUrl) {
+    var restaurantId = requestUrl.replace(/\/reviews\//, '');
+    return DBHelper.dbPromise.then(function(db){
+      if (db) {
+        var tx = db.transaction('reviews', 'readonly');
+        var store = tx.objectStore('reviews').index('by-restaurant');
+        return store.getAll(restaurantId);
+      }
+      return undefined;
+    }).then(data => {
+      if (data.length > 0) { return Promise.resolve(data); }
+
+      return DBHelper.dbPromise.then(function(db){
+        return fetch(requestUrl).then(function(response) {
+          response.clone().json().then(json => {
+            var tx = db.transaction('reviews', 'readwrite');
+            var store = tx.objectStore('reviews');
+            
+            json.forEach(review => {
+              store.put(review, review.id);
+            }); 
           });
           return response.json();
         });

@@ -120,7 +120,7 @@ let fillReviewsHTML = (reviews = self.restaurant.reviews) => {
 
   if (!reviews) {
     const noReviews = document.createElement('p');
-    noReviews.innerHTML = 'No reviews yet!';
+    noReviews.appendChild(createReviewFormHTML());
     container.appendChild(noReviews);
     return;
   }
@@ -128,6 +128,9 @@ let fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   reviews.forEach(review => {
     ul.appendChild(createReviewHTML(review));
   });
+
+  ul.appendChild(createReviewFormHTML());
+
   container.appendChild(ul);
 };
 
@@ -141,7 +144,7 @@ let createReviewHTML = (review) => {
   li.appendChild(name);
 
   const date = document.createElement('p');
-  date.innerHTML = review.date;
+  date.innerHTML = new Date(review.createdAt).toDateString();
   li.appendChild(date);
 
   const rating = document.createElement('p');
@@ -156,6 +159,91 @@ let createReviewHTML = (review) => {
   return li;
 };
 
+let createReviewFormHTML = () => {
+  const li = document.createElement('li');
+  const name = document.createElement('p');
+  name.classList.add('user-review');
+  
+  name.setAttribute('aria-label', 'Add your review');
+  name.innerText = 'Your';
+  li.appendChild(name);
+
+  const nameDiv = document.createElement('div');
+  const nameLabel = document.createElement('label');
+  nameLabel.classList.add('user-name-label');
+  nameLabel.setAttribute('for', 'user-name-input');
+  nameLabel.innerText = 'Name';
+  nameLabel.setAttribute('aria-label', 'Your Name');
+  nameDiv.appendChild(nameLabel);
+
+  const nameinput = document.createElement('input');
+  nameinput.id = 'user-name-input';
+  nameinput.name = 'user-name-input';
+  nameinput.setAttribute('type', 'text');
+  nameinput.setAttribute('placeholder', 'Your name here');
+  nameinput.setAttribute('aria-label', 'Your Name');
+  nameinput.classList.add('user-name-input');
+  nameDiv.appendChild(nameinput);
+  li.appendChild(nameDiv);
+
+  const ratingDiv = document.createElement('div');
+  ratingDiv.setAttribute('aria-labelledby', 'user-rating-label');
+  const ratingLabel = document.createElement('label');
+  ratingLabel.classList.add('user-rating-label');
+  ratingLabel.setAttribute('for', 'user-rating-input');
+  ratingLabel.innerText = 'Rating';
+  ratingDiv.appendChild(ratingLabel);
+
+  for (var i=1;i<=5;i++) {
+    const ratingItemLabel = document.createElement('label');
+    ratingItemLabel.classList.add(`stars-${i}`);
+    ratingItemLabel.classList.add('radio-inline');
+    ratingItemLabel.setAttribute('for', `rating-${i}`);
+    ratingItemLabel.innerText = '';
+    
+
+    const ratingInput = document.createElement('input');
+    ratingInput.setAttribute('type', 'radio');
+    ratingInput.setAttribute('aria-label', `${i} stars`);
+    ratingInput.name='ratings';
+    ratingInput.id=`rating-${i}`;
+    ratingInput.setAttribute('value', `${i}`);
+
+    ratingItemLabel.appendChild(ratingInput);
+    ratingDiv.appendChild(ratingItemLabel);
+  }
+
+  li.appendChild(ratingDiv);
+
+  const commentDiv = document.createElement('div');
+  const commentLabel = document.createElement('label');
+  commentLabel.classList.add('user-comment-label');
+  commentLabel.setAttribute('for', 'user-comment-input');
+  commentLabel.setAttribute('aria-label', 'Your Comments');
+  commentLabel.innerText = 'Comments';
+  commentDiv.appendChild(commentLabel);
+
+  const commentinput = document.createElement('textarea');
+  commentinput.id = 'user-comment-input';
+  commentinput.name = 'user-comment-input';
+  commentinput.setAttribute('aria-label', 'Your Comments');
+  commentinput.classList.add('user-comment-input');
+  commentDiv.appendChild(commentinput);
+  li.appendChild(commentDiv);
+
+  const submitDiv = document.createElement('div');
+  const submitButton = document.createElement('a');
+  submitButton.onclick = addNewReview;
+  submitButton.innerHTML = 'Add your review';
+  submitButton.setAttribute('aria-label', 'Submit your review');
+  submitDiv.appendChild(submitButton);
+  li.appendChild(submitDiv);
+  return li;
+};
+
+let addNewReview = () => {
+
+};
 /**
  * Add restaurant name to the breadcrumb navigation menu
  */

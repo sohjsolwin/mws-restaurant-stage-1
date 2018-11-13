@@ -312,15 +312,20 @@ nav {
     margin: 0 0 30px;
     height: 100%;
     padding-bottom: 10px;
-    p {
-      margin: 10px;
-    }
     p:first-child:after {
       content: "'s review";
       display: inline;
       font-weight: 400;
     }
-    p:first-child {
+    div, p {
+      margin: 10px;
+    }
+    p.user-review:after {
+      content: " review";
+      display: inline;
+      font-weight: 400;
+    }
+    div:first-child, p:first-child {
       font-weight: 600;
       font-size: 1.2em;
       width: calc(100% - 15px);
@@ -329,6 +334,14 @@ nav {
       margin: 0;
       padding: 15px 0 15px 15px;
       border: 0;
+    }
+    div {
+      label, input {
+        margin: 10px
+      }
+      .user-comment-label {
+        vertical-align: top;
+      }
     }
   }
 }
