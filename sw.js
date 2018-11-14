@@ -1,4 +1,4 @@
-var staticCacheName = 'restaurant-reviews-static-v13';
+var staticCacheName = 'restaurant-reviews-static-v14';
 var contentImgsCache = 'restaurant-reviews-imgs';
 var allCaches = [
   staticCacheName,
@@ -43,7 +43,7 @@ self.addEventListener('activate', function(event) {
 });
 
 self.addEventListener('message', function(event) {
-  if (event.action == 'flushCache') {
+  if (event.data.action == 'flushCache') {
     syncOfflineRequests();
     console.log('Offline requests synced');
   }
@@ -89,13 +89,14 @@ self.addEventListener('fetch', function(event) {
       //     return response || fetch(event.request);
       //   })
       // );
+      return;
     }
-  } else if (requestMethod == 'POST') {
+  } else if (requestMethod == 'POST' || requestMethod == "PUT" || requestMethod == "DELETE") {
     // Adapted from: https://stackoverflow.com/questions/38986351/serviceworker-cache-all-failed-post-requests-when-offline-and-resubmit-when-on
       
     if (!navigator.onLine) {
       
-      if (event.request.url.includes('/reviews') && !navigator.onLine) {
+      if ((event.request.url.includes('/reviews') || event.request.url.includes('/restaurants') )) {
         var request = event.request;
         var serialized = {
           url: request.url,
@@ -110,9 +111,9 @@ self.addEventListener('fetch', function(event) {
       }
     }
 
-    event.respondWith(fetch(event.request));
   }
 
+  event.respondWith(fetch(event.request));
 });
 
 function syncOfflineRequests() {

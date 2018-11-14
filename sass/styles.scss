@@ -246,6 +246,22 @@ nav {
   }
 }
 
+#restaurant-favorite {
+  visibility: hidden;
+
+  &::before {
+    content: '💔';
+    visibility : visible;
+  }
+  &:checked {
+    &::before {
+      content: '❤️';
+      visibility: visible;
+    }
+  }
+  
+}
+
 #restaurant-name {
   color: #fff;
   background-color: #f18200;

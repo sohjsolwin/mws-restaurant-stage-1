@@ -63,12 +63,29 @@ let fetchRestaurantFromURL = () => {
   }
 };
 
+let toggleFavorite = () => {
+  var restaurantId = self.restaurant.id;
+  DBHelper.toggleRestaurantFavorite(restaurantId);
+};
+
 /**
  * Create restaurant HTML and add it to the webpage
  */
 let fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
+  
+  const favLabel = document.createElement('label');
+  favLabel.setAttribute('for', 'restaurant-favorite');
+  const favCheck = document.createElement('input');
+  favCheck.setAttribute('type', 'checkbox');
+  if (restaurant.is_favorite == 'true') {
+    favCheck.setAttribute('checked', true);
+  }
+  favCheck.id = 'restaurant-favorite';
+  favLabel.appendChild(favCheck);
+  name.appendChild(favLabel);
+  favCheck.onclick = toggleFavorite;
 
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
@@ -161,6 +178,7 @@ let createReviewHTML = (review) => {
 
 let createReviewFormHTML = () => {
   const li = document.createElement('li');
+  li.id = 'user-review';
   li.classList.add('user-review');
   const name = document.createElement('p');
   name.classList.add('user-review');
@@ -188,7 +206,7 @@ let createReviewFormHTML = () => {
   li.appendChild(nameDiv);
 
   const ratingDiv = document.createElement('div');
-  ratingDiv.setAttribute('aria-labelledby', 'user-rating-label');
+  ratingDiv.setAttribute('aria-labeledby', 'user-rating-label');
   const ratingLabel = document.createElement('label');
   ratingLabel.classList.add('user-rating-label');
   ratingLabel.setAttribute('for', 'user-rating-input');
@@ -244,7 +262,6 @@ let createReviewFormHTML = () => {
 };
 
 let addNewReview = () => {
-  //TODO: Inject review before li.user-review;
   let userName = document.querySelector('input[name="user-name-input"]').value;
   let userRating = document.querySelector('input[name="ratings"]:checked').value;
   let userComments = document.querySelector('textarea[name="user-comment-input"]').value;
@@ -252,7 +269,15 @@ let addNewReview = () => {
   DBHelper.storeRestaurantReview(self.restaurant.id, userName, userRating, userComments)
     .then(response => {
       if (response) {
-        location.reload();
+        var reviewForm = document.getElementById('user-review');
+        var reviewList = document.getElementById('reviews-list');
+        var review = {
+          name: userName,
+          createdAt: new Date(),
+          rating: userRating,
+          comments: userComments
+        };
+        reviewList.insertBefore(createReviewHTML(review), reviewForm);
       } else {
         alert('Something went wrong while saving your review. Please try again.');
       }

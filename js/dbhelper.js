@@ -128,7 +128,7 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
 
   static toggleRestaurantFavorite(restaurantId) {
     return DBHelper.fetchRestaurantById(restaurantId).then(restaurant => {
-      restaurant.is_favorite = !restaurant.is_favorite;
+      restaurant.is_favorite = !(restaurant.is_favorite == 'true') + '';
       return DBHelper.dbPromise.then(function(db){
         if (db) {
           var tx = db.transaction('restaurants', 'readwrite');
@@ -239,7 +239,7 @@ http://localhost:1337/reviews/
       }
       return [];
     }).then(data => {
-      if (data.length > 0) {
+      if (data.length > 0 ) {
         return Promise.resolve(data);
       } else {
         return DBHelper.dbPromise.then(function(db){
@@ -260,7 +260,7 @@ http://localhost:1337/reviews/
   }
 
   static matchSingleIdOrDb(requestUrl) {
-    var restaurantId = requestUrl.replace(/\/restaurants\//, '');
+    var restaurantId = /\/restaurants\/(\d*)/.exec(requestUrl)[1] -0;
     return DBHelper.dbPromise.then(function(db){
       if (db) {
         var tx = db.transaction('restaurants', 'readonly');
@@ -286,7 +286,7 @@ http://localhost:1337/reviews/
   }
 
   static matchSingleReviewOrDb(requestUrl) {
-    var restaurantId = /restaurant_id=(\d*)/.exec(requestUrl)[1];
+    var restaurantId = /restaurant_id=(\d*)/.exec(requestUrl)[1] - 0;
     return DBHelper.dbPromise.then(function(db){
       if (db) {
         var tx = db.transaction('reviews', 'readonly');
