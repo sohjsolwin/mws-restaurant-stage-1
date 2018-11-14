@@ -255,6 +255,7 @@ let createRestaurantHTML = (restaurant) => {
   image.className = 'restaurant-img';
   image.setAttribute('alt', `Overview image for the ${restaurant.name} restaurant`);
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.setAttribute('onerror', DBHelper.imageUrlFallbackForRestaurant(restaurant));
   div.append(image);
 
   const container = document.createElement('div');

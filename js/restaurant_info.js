@@ -77,7 +77,7 @@ let fillRestaurantHTML = (restaurant = self.restaurant) => {
   image.className = 'restaurant-img';
   image.setAttribute('alt', `Food from the ${restaurant.name} restaurant`);
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
-
+  image.setAttribute('onerror', DBHelper.imageUrlFallbackForRestaurant(restaurant));
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
 

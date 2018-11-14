@@ -11,8 +11,9 @@ var babel = require('gulp-babel');
 var sourcemaps = require('gulp-sourcemaps');
 var imagemin = require('gulp-imagemin');
 var pngquant = require('imagemin-pngquant');
+var webp = require('gulp-webp');
 
-gulp.task('default', ['copy-html', 'copy-idb', 'copy-images-dist', 'styles', 'lint', 'scripts-home', 'scripts-rest'], function() {
+gulp.task('default', ['copy-html', 'copy-idb', 'copy-images-dist', 'copy-webp-images-dist', 'styles', 'lint', 'scripts-home', 'scripts-rest'], function() {
   gulp.watch('./sass/**/*.scss', ['styles']);
   gulp.watch('./js/**/*.js', ['lint']);
   gulp.watch('./*.html', ['copy-html']);
@@ -29,6 +30,7 @@ gulp.task('dist', [
   'copy-html',
   'copy-idb',
   'copy-images-dist',
+  'copy-webp-images-dist',
   'styles',
   'lint',
   'scripts-home-dist',
@@ -84,11 +86,21 @@ gulp.task('copy-images', function() {
 });
 
 gulp.task('copy-images-dist', function() {
-  gulp.src('img/**/*')
+  gulp.src('img/**/*.{jpg,png}')
     .pipe(imagemin({
       progressive: true,
       use:[pngquant()]
     }))
+    .pipe(gulp.dest('dist/img'));
+});
+
+gulp.task('copy-webp-images-dist', function() {
+  gulp.src('img/*.jpg')
+    .pipe(imagemin({
+      progressive: true,
+      use:[pngquant()]
+    }))
+    .pipe(webp())
     .pipe(gulp.dest('dist/img'));
 });
 

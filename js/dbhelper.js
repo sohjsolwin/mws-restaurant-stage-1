@@ -188,9 +188,13 @@ http://localhost:1337/reviews/
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
-    return (`/img/${restaurant.photograph}.jpg`);
+    return (`/img/${restaurant.photograph}.webp`);
   }
   
+  static imageUrlFallbackForRestaurant(restaurant) {
+    return `this.onerror=null;this.src='/img/${restaurant.photograph}.jpg'`;
+  }
+
   static openDatabase() {
     if(!navigator.serviceWorker) return Promise.resolve();
 
