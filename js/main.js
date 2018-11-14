@@ -300,3 +300,7 @@ let addMarkersToMap = (restaurants = self.restaurants) => {
     }
   });
 };
+
+document.addEventListener('DOMContentLoaded', () => { 
+  document.body.ononline = () => DBHelper._syncCache();
+});

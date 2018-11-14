@@ -54,7 +54,7 @@ let fetchRestaurantFromURL = () => {
       .then((restaurant) => {
         self.restaurant = restaurant;
         if (!restaurant) {
-          return Promise.reject('Mo restaurant found');
+          return Promise.reject('No restaurant found');
         }
         fillRestaurantHTML();
         return restaurant;
@@ -161,6 +161,7 @@ let createReviewHTML = (review) => {
 
 let createReviewFormHTML = () => {
   const li = document.createElement('li');
+  li.classList.add('user-review');
   const name = document.createElement('p');
   name.classList.add('user-review');
   
@@ -243,6 +244,7 @@ let createReviewFormHTML = () => {
 };
 
 let addNewReview = () => {
+  //TODO: Inject review before li.user-review;
   let userName = document.querySelector('input[name="user-name-input"]').value;
   let userRating = document.querySelector('input[name="ratings"]:checked').value;
   let userComments = document.querySelector('textarea[name="user-comment-input"]').value;
@@ -282,3 +284,7 @@ let getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 };
+
+document.addEventListener('DOMContentLoaded', () => { 
+  document.body.ononline = () => DBHelper._syncCache();
+});

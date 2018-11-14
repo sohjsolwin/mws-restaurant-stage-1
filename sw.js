@@ -42,10 +42,19 @@ self.addEventListener('activate', function(event) {
   );
 });
 
+self.addEventListener('message', function(event) {
+  if (event.action == 'flushCache') {
+    syncOfflineRequests();
+    console.log('Offline requests synced');
+  }
+});
+
 
 self.addEventListener('fetch', function(event) {
   var requestUrl = new URL(event.request.url);
   var requestMethod = event.request.method;
+
+  syncOfflineRequests();
 
   if (requestMethod == 'GET') {
     if (requestUrl.origin === location.origin)
@@ -72,12 +81,15 @@ self.addEventListener('fetch', function(event) {
       }
     }
 
-    event.respondWith(matchOrCache(event.request));
-    // event.respondWith(
-    //   caches.match(event.request).then(function(response) {
-    //     return response || fetch(event.request);
-    //   })
-    // );
+    //don't cache our API requests, we're already storing them in IDB. 
+    if (!event.request.url.includes('/reviews') && !event.request.url.includes('/restaurants')){
+      event.respondWith(matchOrCache(event.request));
+      // event.respondWith(
+      //   caches.match(event.request).then(function(response) {
+      //     return response || fetch(event.request);
+      //   })
+      // );
+    }
   } else if (requestMethod == 'POST') {
     // Adapted from: https://stackoverflow.com/questions/38986351/serviceworker-cache-all-failed-post-requests-when-offline-and-resubmit-when-on
       
@@ -96,20 +108,29 @@ self.addEventListener('fetch', function(event) {
         event.respondWith(new Response(new Blob(), { 'status' : 200 , 'statusText' : 'Response Cached' }));     
         return;
       }
-    } else if(navigator.onLine && callsToCache.length > 0) {
-      callsToCache.forEach(function(reviewRequest) {
-        fetch(reviewRequest.url, {
-          method: reviewRequest.method,
-          body: reviewRequest.body
-        });
-      });
-      callsToCache = [];
     }
 
     event.respondWith(fetch(event.request));
   }
 
 });
+
+function syncOfflineRequests() {
+  if(navigator.onLine && callsToCache.length > 0) {
+    var newCallsToCache = [];
+    callsToCache.forEach(function(reviewRequest) {
+      fetch(reviewRequest.url, {
+        method: reviewRequest.method,
+        body: reviewRequest.body
+      }).then(function(response) {
+        if (!response.ok) {
+          newCallsToCache.push(reviewRequest);
+        }
+      });
+    });
+    callsToCache = newCallsToCache;
+  }
+}
 
 function matchOrCache(request) {
   var originalRequest = request;

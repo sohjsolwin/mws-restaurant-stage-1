@@ -126,6 +126,25 @@ class DBHelper { /* eslint-disable-line no-unused-vars */
     });
   }
 
+  static toggleRestaurantFavorite(restaurantId) {
+    return DBHelper.fetchRestaurantById(restaurantId).then(restaurant => {
+      restaurant.is_favorite = !restaurant.is_favorite;
+      return DBHelper.dbPromise.then(function(db){
+        if (db) {
+          var tx = db.transaction('restaurants', 'readwrite');
+          var store = tx.objectStore('restaurants');
+          store.put(restaurant, restaurant.id);
+        }
+      }).then(() => {
+        //http://localhost:1337/restaurants/<restaurant_id>/?is_favorite=true
+        fetch(`${DBHelper.RESTAURANTS_URL}/${restaurantId}?is_favorite=${restaurant.is_favorite}`, 
+          {
+            method: 'PUT'
+          });
+      });
+    });
+  }
+
   /*
 #### Create a new restaurant review
 ```
@@ -339,5 +358,9 @@ http://localhost:1337/reviews/
       });
     marker.addTo(map);
     return marker;
+  }
+
+  static _syncCache() {
+    navigator.serviceWorker.controller.postMessage({action: 'flushCache'});
   }
 }
